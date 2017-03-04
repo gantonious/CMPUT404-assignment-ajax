@@ -22,7 +22,7 @@
 
 
 import flask
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, Response
 import json
 app = Flask(__name__)
 app.debug = True
@@ -72,6 +72,11 @@ def flask_post_json():
     else:
         return json.loads(request.form.keys()[0])
 
+# From: http://blog.luisrei.com/articles/flaskrest.html
+def flask_json_response(body, code=200):
+    response_body = json.dumps(body)
+    return Response(response_body, status=code, mimetype='application/json')
+
 @app.route("/")
 def hello():
     # From: http://stackoverflow.com/a/14343978
@@ -83,31 +88,31 @@ def update(entity):
     body = flask_post_json()
 
     if 'x' in body:
-        myWorld.update(entity, 'x', body.x)
+        myWorld.update(entity, 'x', body['x'])
 
     if 'y' in body:
-        myWorld.update(entity, 'y', body.y)
+        myWorld.update(entity, 'y', body['y'])
 
     if 'colour' in body:
-        myWorld.update(entity, 'colour', body.colour)
+        myWorld.update(entity, 'colour', body['colour'])
 
-    return myWorld.get(entity)
+    return flask_json_response(myWorld.get(entity))
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return myWorld
+    return flask_json_response(myWorld.world())
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return myWorld.get(entity)
+    return flask_json_response(myWorld.get(entity))
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
     myWorld.clear()
-    return None
+    return Response("")
 
 if __name__ == "__main__":
     app.run()
