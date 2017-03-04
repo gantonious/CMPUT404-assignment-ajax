@@ -31,15 +31,16 @@ var context = canvas.getContext("2d");
 var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
 
+var base_url = "http://127.0.0.1:5000"
 
-function sendJSONXMLHTTPRequest(url, objects, callback) {
+function sendJSONXMLHTTPRequest(url, callback, requestInitiator) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState==4) {
             try {
                 if (xhr.status==200) {
-                    //XXX: parse some JSON from the request!
-                    //XXX: Pass the data to the callback!
+                    response_body = JSON.parse(xhr.responseText);
+                    callback(response_body);
                 }
             } 
             catch(e) {
@@ -47,11 +48,37 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
             }
         }
     };
-    //XXX: POST to a URL
-    //XXX: set the mimetype and the accept headers!
-    // Remember to use application/json !
+
+    requestInitiator(xhr);
 }
 
+function getJSON(url, callback) {
+    sendJSONXMLHTTPRequest(url, callback, function(xhr) {
+        xhr.open("GET", url);
+        xhr.send();
+    });
+}
+
+function postJSON(url, body, callback) {
+    sendJSONXMLHTTPRequest(url, callback, function(xhr) {
+        xhr.open("POST", url);
+        xhr.overrideMimeType("application/json");
+        xhr.send(JSON.stringify(body));
+    });
+}
+
+function createOrUpdateRemoteEntity(id, entity) {
+    var update_endpoint = base_url + '/entity/' + id
+
+    postJSON(update_endpoint, entity, function(res) {
+        console.log(res);
+    });
+}
+
+function getRemoteWorld(callback) {
+    var world_endpoint = base_url + "/world"
+    getJSON(world_endpoint, callback);
+}
 
 world = {};
 
@@ -135,10 +162,9 @@ function getPosition(e) {
 
 
 function addEntity(entity, data) {
-    world[entity] = data;
-    drawNextFrame(); // (but should we?)
-    //XXX: Send a XHTML Request that updates the entity you just  modified!
-
+    //world[entity] = data;
+    //drawNextFrame(); // (but should we?)
+    createOrUpdateRemoteEntity(entity, data);
 }
 
 var counter = 0;
@@ -261,7 +287,11 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
 
 
 function update() {
-    //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
+    getRemoteWorld(function(remote_world) {
+        world = remote_world;
+        drawNextFrame();
+    })
+
     drawFrame();
 }
 
