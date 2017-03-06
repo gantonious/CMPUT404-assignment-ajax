@@ -32,8 +32,6 @@ var context = canvas.getContext("2d");
 var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
 
-var base_url = "http://127.0.0.1:5000"
-
 function sendJSONXMLHTTPRequest(url, callback, requestInitiator) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
@@ -69,17 +67,17 @@ function postJSON(url, body, callback=function(res){}) {
 }
 
 function createOrUpdateRemoteEntity(id, entity) {
-    var update_endpoint = base_url + '/entity/' + id
+    var update_endpoint = '/entity/' + id
     postJSON(update_endpoint, entity);
 }
 
 function getRemoteWorld(callback) {
-    var world_endpoint = base_url + "/world";
+    var world_endpoint = "/world";
     getJSON(world_endpoint, callback);
 }
 
 function resetRemoteWorld() {
-    var reset_endpoint = base_url + "/clear";
+    var reset_endpoint = "/clear";
     postJSON(reset_endpoint, {});
 }
 
